@@ -1,0 +1,227 @@
+---
+title: "Project 1"
+author: "Jacob Duvall"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    csl: biomed-central.csl
+    df_print: paged
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    number_sections: yes
+    theme: journal
+    toc: yes
+    toc_float: yes
+  word_document:
+    toc: yes
+    toc_depth: '4'
+  pdf_document:
+    df_print: kable
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+#bibliography: project.bib
+abstract: The SWDEFECTS file analyzed in this project is a collection of data that was found through experimentation in software. The data reflects the inaccuracy or oversight in code resulting in software bugs. The experimenters in this data collection hypothesized with their results through probability theory. The results of this probability theory, as well as the algorithms used to calculate the results, can be seen in the analyzed data of this document.
+---
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction To The Data
+
+## Can Software Bugs Be Predicted? 
+
+Software engineers generally lack the sufficient time to iron out all of the problems in their code. There is not enough time, and code is expensive to develop. Therefore, blind spots exist in programs that can cause problems in the software. For this project, the SWDEFECTS csv file is examined. This file contains data used in a study on the defects in software written in C. Nearly 500 modules of code is examined and data is extracted from this examination to populate the SWDEFECTS file. The examination of this data led to methods of predicting whether code would contain a potential bug or blind spot in the code. Those that conducted the experiments came up with formulae that predict the occurrence of bugs, or lack thereof.
+
+## Summary Table For Evaluating Defect Prediction Algorithms and Prediction Formulae  
+
+```{r}
+# create a matrix to print as table
+data = matrix(c("a", "b", "c", "d"), ncol= 2, byrow = TRUE)
+colnames(data) = c("No", "Yes")
+rownames(data) = c("False", "True")
+data = as.table(data)
+title = "COLUMNS: Has Defects (No/Yes) ROWS: Algorithm Predict Defects (False/True)"
+title
+data
+```
+
+
+
+### Accuracy Algorithm:
+$$
+\begin{eqnarray}
+P(AlgorithmIsCorrect) & = & \frac{(a+d)}{(a+b+c+d)}
+\end{eqnarray}
+$$
+
+### Detection Rate: 
+$$
+\begin{eqnarray}
+P(PredictDefect|ModuleHasDefect) & = & \frac{(d)}{(b+d)}
+\end{eqnarray}
+$$
+
+### False Alarm Rate: 
+$$
+\begin{eqnarray}
+P(PredictDefect|ModuleHasNoDefect) & = & \frac{(c)}{(a+c)}
+\end{eqnarray}
+$$
+
+### Precision: 
+$$
+\begin{eqnarray}
+P(ModuleHasDefect|PredictDefect) & = & \frac{(d)}{(c+d)}
+\end{eqnarray}
+$$
+
+# Algorithm Code
+
+```{r accuracy, eval=TRUE}
+# function to calculate accuracy 
+acc=function(a,b,c,d)
+{
+  (a+d)/(a+b+c+d)
+}
+```
+
+```{r detecton, eval=TRUE}
+# function to calculate detection rate
+detect=function(b,d)
+{
+  (d)/(b+d)
+}
+```
+
+```{r alarm, eval=TRUE}
+# function to calculate false alarm rate
+falarm=function(a,c)
+{
+  (c)/(a+c)
+}
+```
+
+```{r precision, eval=TRUE}
+# function to calculate precision
+prec=function(c,d)
+{
+  (d)/(c+d)
+}
+```
+
+
+# Cross Data Tables And Barplots 
+
+## PRED_LOC * DEFECT 
+
+```{r }
+# load SWDEFECTS and create a table with predict.loc.50
+swd=read.csv("SWDEFECTS.csv")
+head(swd)
+tab=with(swd, table(predict.loc.50,defect))
+barplot(tab, beside=TRUE, leg=TRUE)
+tab2=addmargins(tab)
+tab2
+```
+
+
+## PRED_VG * DEFECT 
+
+```{r }
+# create a table with predict.vg.10
+tab=with(swd, table(predict.vg.10,defect))
+barplot(tab, beside=TRUE, leg=TRUE)
+tab2=addmargins(tab)
+tab2
+```
+
+## PRED_EVG * DEFECT 
+
+```{r }
+# Create a table with predict.evg.14.5
+tab=with(swd, table(predict.evg.14.5,defect))
+barplot(tab, beside=TRUE, leg=TRUE)
+tab2=addmargins(tab)
+tab2
+```
+
+## PRED_IVG * DEFECT 
+
+```{r }
+# load SWDEFECTS and create a table with predict.ivg.9.2
+tab=with(swd, table(predict.ivg.9.2,defect))
+barplot(tab, beside=TRUE, leg=TRUE)
+tab2=addmargins(tab)
+tab2
+```
+
+# Probability Measures For Evaluating Defect Prediction Algorithms
+
+```{r}
+# perform computations and create one data frame
+tab=with(swd, table(predict.loc.50,defect))
+linesOfCodeAcc= acc(tab[1,"FALSE"],tab[1,"TRUE"],tab[2,"FALSE"],tab[2,"TRUE"])
+linesOfCodeDetect = detect(tab[1,"TRUE"],tab[2,"TRUE"])
+linesOfCodeFalarm = falarm(tab[1,"FALSE"],tab[2,"FALSE"])
+linesOfCodePrec = prec(tab[2, "FALSE"], tab[2, "TRUE"])
+
+tab=with(swd, table(predict.vg.10,defect))
+cyclomaticAcc= acc(tab[1,"FALSE"],tab[1,"TRUE"],tab[2,"FALSE"],tab[2,"TRUE"])
+cyclomaticDetect = detect(tab[1,"TRUE"],tab[2,"TRUE"])
+cyclomaticFalarm = falarm(tab[1,"FALSE"],tab[2,"FALSE"])
+cyclomaticPrec = prec(tab[2, "FALSE"], tab[2, "TRUE"])
+
+tab=with(swd, table(predict.evg.14.5,defect))
+essentialAcc= acc(tab[1,"FALSE"],tab[1,"TRUE"],tab[2,"FALSE"],tab[2,"TRUE"])
+essentialDetect = detect(tab[1,"TRUE"],tab[2,"TRUE"])
+essentialFalarm = falarm(tab[1,"FALSE"],tab[2,"FALSE"])
+essentialPrec = prec(tab[2, "FALSE"], tab[2, "TRUE"])
+
+tab=with(swd, table(predict.ivg.9.2,defect))
+designAcc= acc(tab[1,"FALSE"],tab[1,"TRUE"],tab[2,"FALSE"],tab[2,"TRUE"])
+designDetect = detect(tab[1,"TRUE"],tab[2,"TRUE"])
+designFalarm = falarm(tab[1,"FALSE"],tab[2,"FALSE"])
+designPrec = prec(tab[2, "FALSE"], tab[2, "TRUE"])
+
+data = matrix(c(linesOfCodeAcc,linesOfCodeDetect,linesOfCodeFalarm,linesOfCodePrec,
+                cyclomaticAcc,cyclomaticDetect,cyclomaticFalarm,cyclomaticPrec,
+                essentialAcc,essentialDetect,essentialFalarm,essentialPrec,
+                designAcc,designDetect,designFalarm,designPrec), byrow = TRUE, ncol = 4)
+colnames(data) = c("Accuracy", "Detection Rate", "False Alarm Rate", "Precision")
+rownames(data) = c("Lines of code", "Cylomatic complexity", "Essential Complexity", "Design Complexity")
+tab3 = as.table(data)
+tab3
+```
+ 
+```{r}
+# create matrix and use it with function mybar()
+data = matrix(c(linesOfCodeAcc,linesOfCodeDetect,linesOfCodeFalarm,linesOfCodePrec,
+                cyclomaticAcc,cyclomaticDetect,cyclomaticFalarm,cyclomaticPrec,
+                essentialAcc,essentialDetect,essentialFalarm,essentialPrec,
+                designAcc,designDetect,designFalarm,designPrec), byrow = TRUE, ncol = 4)
+
+#mybar takes a table and accuracy digit to make a barplot and list rounded to accuracy
+mybar=function(tab, acc)
+{
+  barplot(round(tab,acc), main = "Probability Meausures as Barplot", 
+          col = c("red","green","blue","purple"), 
+          beside = TRUE)        
+  legend("topright", c("Lines of code","Cyclomatic complexity", "Essential complexity",
+                       "Design complexity"), fill = c("red","green","blue","purple"))
+  
+  list(round(tab, acc))
+}
+mybar(data,4)
+
+```
+ 
+ 
